@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   backend:
     build: ./backend
@@ -11,7 +9,6 @@ services:
     env_file:
       - .env
     environment:
-      - CHROMA_DB_IMPL=duckdb+parquet
       - PYTHONUNBUFFERED=1
 
   frontend:
