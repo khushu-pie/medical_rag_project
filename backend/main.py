@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 import os
 import shutil
-from ingestion import process_pdf, process_image
+from ingestion import process_pdf, process_image, process_audio
 from retriever import get_retriever
 from llm import generate_response
 from dotenv import load_dotenv
@@ -23,6 +23,7 @@ app.add_middleware(
 
 os.makedirs("uploads/docs", exist_ok=True)
 os.makedirs("uploads/images", exist_ok=True)
+os.makedirs("uploads/audio", exist_ok=True)
 
 @app.on_event("startup")
 async def startup_event():
@@ -57,8 +58,15 @@ async def upload_file(file: UploadFile = File(...)):
             retriever.index_images(image_records)
             return {"message": f"Successfully processed and indexed Image: {file.filename}"}
             
+        elif file_ext in ['mp3', 'wav', 'm4a']:
+            audio_path = f"uploads/audio/{file.filename}"
+            shutil.move(file_path, audio_path)
+            text_chunks = process_audio(audio_path, file.filename)
+            retriever.index_text(text_chunks)
+            return {"message": f"Successfully processed and indexed Audio: {file.filename}"}
+            
         else:
-            raise HTTPException(status_code=400, detail="Unsupported file type. Please upload PDF, JPG, or PNG.")
+            raise HTTPException(status_code=400, detail="Unsupported file type. Please upload PDF, JPG, PNG, MP3, WAV, or M4A.")
             
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error uploading file: {str(e)}")
@@ -80,7 +88,7 @@ async def clear_data():
         retriever.clear()
         
         # Clear files in uploads directories
-        for folder in ["uploads/docs", "uploads/images"]:
+        for folder in ["uploads/docs", "uploads/images", "uploads/audio"]:
             if os.path.exists(folder):
                 for filename in os.listdir(folder):
                     file_path = os.path.join(folder, filename)

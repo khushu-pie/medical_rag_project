@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
-import { UploadCloud, Image as ImageIcon, Send, FileText, Activity, Trash2 } from 'lucide-react';
+import { UploadCloud, Image as ImageIcon, Send, FileText, Activity, Trash2, Mic } from 'lucide-react';
 
 function App() {
   const [messages, setMessages] = useState([]);
@@ -107,7 +107,7 @@ function App() {
             ) : (
               <>
                 <UploadCloud className="upload-icon" />
-                <p className="upload-text">Click to upload PDF, JPG, or PNG</p>
+                <p className="upload-text">Click to upload PDF, JPG, PNG, or Audio</p>
               </>
             )}
             <input 
@@ -115,7 +115,7 @@ function App() {
               ref={fileInputRef} 
               onChange={handleFileChange} 
               style={{ display: 'none' }} 
-              accept=".pdf,.jpg,.jpeg,.png"
+              accept=".pdf,.jpg,.jpeg,.png,.mp3,.wav,.m4a"
             />
           </div>
           
@@ -123,7 +123,9 @@ function App() {
           <ul className="file-list">
             {uploadedFiles.map((file, idx) => (
               <li key={idx} className="file-item">
-                {file.toLowerCase().endsWith('.pdf') ? <FileText size={16} color="#2563eb"/> : <ImageIcon size={16} color="#10b981"/>}
+                {file.toLowerCase().endsWith('.pdf') ? <FileText size={16} color="#2563eb"/> : 
+                 (file.toLowerCase().endsWith('.mp3') || file.toLowerCase().endsWith('.wav') || file.toLowerCase().endsWith('.m4a')) ? <Mic size={16} color="#8b5cf6"/> : 
+                 <ImageIcon size={16} color="#10b981"/>}
                 <span style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{file}</span>
               </li>
             ))}

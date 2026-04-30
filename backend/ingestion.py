@@ -90,3 +90,48 @@ def process_image(file_path, original_filename):
         })
         
     return text_chunks, image_records
+
+def extract_audio_with_gemini(audio_path):
+    """Uses Gemini to transcribe an audio file."""
+    try:
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if not api_key:
+            print("Warning: GEMINI_API_KEY not set. Skipping audio transcription.")
+            return ""
+            
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        
+        print(f"Uploading audio file {audio_path} to Gemini...")
+        audio_file = genai.upload_file(path=audio_path)
+        
+        prompt = "Please transcribe this medical audio exactly as it is spoken. Do not add conversational text, just return the transcribed text."
+        
+        response = model.generate_content([prompt, audio_file])
+        
+        try:
+            genai.delete_file(audio_file.name)
+        except Exception as e:
+            print(f"Warning: Failed to delete audio file from Gemini storage: {e}")
+            
+        return response.text.strip()
+    except Exception as e:
+        print(f"Audio Transcription Error for {audio_path}: {e}")
+        return ""
+
+def process_audio(file_path, original_filename):
+    """Processes a direct audio upload and transcribes it."""
+    text_chunks = []
+    print(f"Transcribing audio {original_filename}...")
+    extracted_text = extract_audio_with_gemini(file_path)
+    
+    if extracted_text:
+        print(f"Successfully transcribed audio from {original_filename}")
+        text_chunks.append({
+            "id": f"txt_{uuid.uuid4().hex}",
+            "text": f"[Audio Transcription of {original_filename}]:\n{extracted_text}",
+            "metadata": {"source": original_filename, "type": "text_from_audio"}
+        })
+        
+    return text_chunks
+
