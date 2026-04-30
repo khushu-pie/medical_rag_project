@@ -1,5 +1,6 @@
 import google.generativeai as genai
 import os
+from PIL import Image
 
 def generate_response(query, context):
     api_key = os.environ.get("GEMINI_API_KEY")
@@ -7,7 +8,7 @@ def generate_response(query, context):
         return "Error: GEMINI_API_KEY environment variable is not set."
         
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash')
     
     prompt = f"""You are a helpful AI assistant answering medical-related queries based ONLY on the provided context.
     
@@ -19,11 +20,6 @@ def generate_response(query, context):
         for i, t in enumerate(context["texts"]):
             prompt += f"[Source: {t['metadata'].get('source', 'unknown')}, Page: {t['metadata'].get('page', 'N/A')}]: {t['text']}\n\n"
             
-    if context.get("images"):
-        prompt += "\n--- IMAGE CONTEXT ---\n"
-        for i, img in enumerate(context["images"]):
-            prompt += f"[Image related to query found in {img['metadata'].get('source', 'unknown')} at Page {img['metadata'].get('page', 'N/A')}]\n"
-            
     prompt += f"""
     ---
     USER QUERY: {query}
@@ -34,8 +30,19 @@ def generate_response(query, context):
     3. You must ALWAYS include this exact medical disclaimer at the very end of your response, on a new line: "This is not a substitute for professional medical advice"
     """
     
+    contents = [prompt]
+    
+    if context.get("images"):
+        for i, img in enumerate(context["images"]):
+            img_path = img['metadata'].get('path')
+            if img_path and os.path.exists(img_path):
+                try:
+                    contents.append(Image.open(img_path))
+                except Exception as e:
+                    print(f"Error loading image {img_path} for LLM context: {e}")
+    
     try:
-        response = model.generate_content(prompt)
+        response = model.generate_content(contents)
         return response.text
     except Exception as e:
         print(f"Error generating response: {e}")

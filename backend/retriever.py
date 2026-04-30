@@ -66,6 +66,16 @@ class MultiModalRetriever:
                 metadatas=metadatas
             )
 
+    def clear(self):
+        try:
+            self.client.delete_collection(name="text_docs")
+        except Exception: pass
+        try:
+            self.client.delete_collection(name="image_docs")
+        except Exception: pass
+        self.text_collection = self.client.get_or_create_collection(name="text_docs")
+        self.image_collection = self.client.get_or_create_collection(name="image_docs")
+
     def search(self, query, top_k=3):
         results = {"texts": [], "images": []}
         

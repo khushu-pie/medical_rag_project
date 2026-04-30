@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
-import { UploadCloud, Image as ImageIcon, Send, FileText, Activity } from 'lucide-react';
+import { UploadCloud, Image as ImageIcon, Send, FileText, Activity, Trash2 } from 'lucide-react';
 
 function App() {
   const [messages, setMessages] = useState([]);
@@ -69,6 +69,22 @@ function App() {
     }
   };
 
+  const handleClear = async () => {
+    if (!window.confirm("Are you sure you want to wipe all stored documents and start fresh?")) return;
+    
+    setIsLoading(true);
+    try {
+      await axios.post('http://localhost:8000/clear');
+      setUploadedFiles([]);
+      setMessages([]);
+      alert("Database wiped successfully. You can now start fresh!");
+    } catch (error) {
+      alert(`Clear failed: ${error.response?.data?.detail || error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="app-container">
       <div className="header">
@@ -115,6 +131,14 @@ function App() {
               <li style={{fontSize: '0.85rem', color: '#94a3b8', padding: '12px 0'}}>No files uploaded yet.</li>
             )}
           </ul>
+          
+          <button 
+            onClick={handleClear} 
+            style={{marginTop: '15px', width: '100%', padding: '10px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: 500, opacity: isLoading ? 0.7 : 1}}
+            disabled={isLoading}
+          >
+            <Trash2 size={16} /> Wipe Database
+          </button>
         </div>
         
         <div className="chat-panel">
