@@ -89,6 +89,7 @@ HealthRAG's USP is its **Tri-Modal Intelligence and Advanced Context Injection**
 2. **Multi-Modal Synchronization:** Extracting images gracefully from PDFs using PyMuPDF and ensuring they mapped correctly to the same semantic space as the text.
 3. **Gemini Storage Management:** Implementing audio transcription required uploading files to Gemini's remote storage. We had to implement robust `try/except` blocks to manually delete these files post-transcription to maintain privacy and prevent storage leaks.
 4. **Cross-Collection Search:** Querying two separate ChromaDB collections (`text_docs` and `image_docs`) and fusing the results gracefully for the final LLM prompt.
+5. **Wipe Database:** When the user wanted to enter the documents concerning another disease or different patient and don't want the previous document's data to be read, then even on refreshing and entering fresh documents, the LLM was including the previous data in its answers. To eliminate this issue, we introduced Wipe Database option to erase the already existing Data on ChromaDB and start with the fresh data only.
 
 ---
 
